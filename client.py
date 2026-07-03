@@ -10,5 +10,3 @@ class Settings(BaseSettings):
 settings = Settings()
 
 cm_client = AsyncOpenAI(api_key=settings.CALLMISSED_API_KEY, base_url=settings.BASE_URL)
-
-print(cm_client)
