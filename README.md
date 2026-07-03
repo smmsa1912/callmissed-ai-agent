@@ -27,8 +27,8 @@ As a bonus for easy evaluation, this project includes a lightweight, interactive
 Clone the repository and install the required packages:
 
 ```bash
-git clone [https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git](https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git)
-cd YOUR_REPO_NAME
+git clone https://github.com/smmsa1912/callmissed-ai-agent.git
+cd callmissed-ai-agent
 pip install -r requirements.txt
 ```
 
@@ -37,7 +37,7 @@ Create a `.env` file in the root directory (you can copy `.env.example`). It mus
 
 ```env
 CALLMISSED_API_KEY="cm_your_api_key_here"
-BASE_URL="[https://api.callmissed.com/v1](https://api.callmissed.com/v1)"
+BASE_URL="https://api.callmissed.com/v1"
 MODELS='{
     "chat":"kimi-k2.7-code",
     "vision":"kimi-k2.7-code",

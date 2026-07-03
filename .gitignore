@@ -2,6 +2,7 @@
 .env
 .venv
 .idea/
+.idea
 env/
 venv/
 ENV/
