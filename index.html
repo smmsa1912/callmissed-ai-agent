@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CallMissed AI Agent</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f9fafb; color: #111827; }
+        h1 { text-align: center; color: #4f46e5; margin-bottom: 30px; }
+
+        /* Tab Navigation Styles */
+        .tabs { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
+        .tab-btn { background-color: #e5e7eb; color: #374151; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.2s; font-size: 16px; }
+        .tab-btn:hover { background-color: #d1d5db; }
+        .tab-btn.active { background-color: #4f46e5; color: white; }
+
+        /* Section Styles */
+        .section { display: none; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; min-height: 350px; }
+        .section.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Input & Button Styles */
+        input[type="text"], input[type="file"] { width: calc(100% - 22px); padding: 10px; margin-bottom: 10px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 16px; transition: border-color 0.2s;}
+        input[type="text"]:focus { outline: none; border-color: #4f46e5; }
+        .action-btn { background-color: #4f46e5; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; font-size: 16px; transition: background-color 0.2s;}
+        .action-btn:hover { background-color: #4338ca; }
+        .action-btn:disabled { background-color: #9ca3af; cursor: not-allowed; }
+
+        /* Chat Specific */
+        #chat-box { height: 250px; overflow-y: auto; border: 1px solid #e5e7eb; padding: 15px; margin-bottom: 10px; background: #f3f4f6; border-radius: 8px; white-space: pre-wrap;}
+        .message { margin-bottom: 15px; line-height: 1.4; animation: slideUp 0.3s ease-out; padding: 10px 15px; border-radius: 8px; max-width: 85%; }
+        .user-msg { background-color: #dbeafe; color: #1e40af; margin-left: auto; border-bottom-right-radius: 2px; }
+        .ai-msg { background-color: #ffffff; color: #1f2937; border: 1px solid #e5e7eb; margin-right: auto; border-bottom-left-radius: 2px; }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Typing Indicator Animation (Chat) */
+        .typing-indicator { display: flex; gap: 4px; padding: 15px; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; width: fit-content; margin-bottom: 15px; animation: slideUp 0.3s ease-out;}
+        .dot { width: 8px; height: 8px; background: #9ca3af; border-radius: 50%; animation: pulse 1.4s infinite ease-in-out both; }
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes pulse { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+        /* Advanced Loader for Image & Vision */
+        .ai-loader { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 50px 20px; background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 8px; margin-top: 15px; animation: borderPulse 2s infinite ease-in-out; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #e0e7ff; border-top-color: #4f46e5; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        .loader-text { color: #4338ca; font-weight: 600; font-size: 15px; animation: textPulse 1.5s infinite ease-in-out; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes borderPulse { 50% { border-color: #94a3b8; background: #f1f5f9; } }
+        @keyframes textPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        /* Result Specific */
+        #image-result img, #vision-result img { max-width: 100%; border-radius: 4px; margin-top: 15px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); animation: fadeIn 0.6s ease-in-out;}
+    </style>
+</head>
+<body>
+
+    <h1>CallMissed AI Demo</h1>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="showTab(event, 'chat-section')">Chat API</button>
+        <button class="tab-btn" onclick="showTab(event, 'image-section')">Image Gen</button>
+        <button class="tab-btn" onclick="showTab(event, 'vision-section')">Vision Analysis</button>
+    </div>
+
+    <div id="chat-section" class="section active">
+        <div id="chat-box"></div>
+        <input type="text" id="chat-input" placeholder="Type a message and press Enter...">
+        <button id="chat-btn" class="action-btn" onclick="sendChat()">Send Message</button>
+    </div>
+
+    <div id="image-section" class="section">
+        <input type="text" id="image-prompt" placeholder="Describe an image to generate (e.g., A cyberpunk cat)...">
+        <button id="image-btn" class="action-btn" onclick="generateImage()">Generate Image</button>
+        <div id="image-result"></div>
+    </div>
+
+    <div id="vision-section" class="section">
+        <input type="file" id="vision-file" accept="image/*">
+        <input type="text" id="vision-question" placeholder="What do you want to know about this image?">
+        <button id="vision-btn" class="action-btn" onclick="analyzeImage()">Analyze Image</button>
+        <div id="vision-result" style="margin-top:10px; white-space: pre-wrap;"></div>
+    </div>
+
+    <script>
+        // --- Tab Logic ---
+        function showTab(event, sectionId) {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // --- Enter Key Event Listeners ---
+        document.getElementById('chat-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') document.getElementById('chat-btn').click();
+        });
+        document.getElementById('image-prompt').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') document.getElementById('image-btn').click();
+        });
+        document.getElementById('vision-question').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') document.getElementById('vision-btn').click();
+        });
+
+        let currentSessionId = null;
+
+        // --- Chat Logic ---
+        async function sendChat() {
+            const input = document.getElementById('chat-input');
+            const chatBox = document.getElementById('chat-box');
+            const btn = document.getElementById('chat-btn');
+            const message = input.value.trim();
+            if (!message) return;
+
+            // Display user message
+            chatBox.innerHTML += `<div class="message user-msg"><strong>You:</strong><br>${message}</div>`;
+            input.value = '';
+            btn.disabled = true;
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            const payload = { message: message };
+            if (currentSessionId) payload.session_id = currentSessionId;
+
+            // Add typing indicator
+            const loadingId = 'loading-' + Date.now();
+            chatBox.innerHTML += `<div id="${loadingId}" class="typing-indicator"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                let aiMessageDiv = null;
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+
+                    // Remove loading indicator on first chunk
+                    const loadingEl = document.getElementById(loadingId);
+                    if (loadingEl) loadingEl.remove();
+
+                    // Create AI message container if it doesn't exist yet
+                    if (!aiMessageDiv) {
+                        aiMessageDiv = document.createElement('div');
+                        aiMessageDiv.className = 'message ai-msg';
+                        aiMessageDiv.innerHTML = '<strong>AI:</strong><br>';
+                        chatBox.appendChild(aiMessageDiv);
+                    }
+
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = line.replace('data: ', '');
+                            if (data === '[DONE]') break;
+                            if (data.startsWith('[SESSION_ID]')) {
+                                currentSessionId = data.replace('[SESSION_ID]', '');
+                            } else {
+                                aiMessageDiv.innerHTML += data;
+                                chatBox.scrollTop = chatBox.scrollHeight;
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                const loadingEl = document.getElementById(loadingId);
+                if (loadingEl) loadingEl.remove();
+                chatBox.innerHTML += `<div class="message ai-msg" style="color:red">Error: ${error.message}</div>`;
+            }
+            btn.disabled = false;
+            input.focus();
+        }
+
+        // --- Image Generation Logic ---
+        async function generateImage() {
+            const prompt = document.getElementById('image-prompt').value;
+            const resultDiv = document.getElementById('image-result');
+            const btn = document.getElementById('image-btn');
+            if (!prompt) return;
+
+            btn.disabled = true;
+
+            // New Advanced Loader
+            resultDiv.innerHTML = `
+                <div class="ai-loader">
+                    <div class="spinner"></div>
+                    <div class="loader-text">Generating image... this might take 10-15 seconds.</div>
+                </div>
+            `;
+
+            try {
+                const response = await fetch('/image', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <img src="${data.url}" alt="Generated Image">
+                        <button class="action-btn" style="background-color: #10b981; margin-top: 15px;" onclick="downloadImage('${data.url}')">
+                            ⬇️ Download Image
+                        </button>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<span style="color:red; display:block; margin-top:15px;">Error: ${data.detail || 'Failed to generate'}</span>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span style="color:red; display:block; margin-top:15px;">Error: ${error.message}</span>`;
+            }
+            btn.disabled = false;
+        }
+
+        // --- Helper: Download Image File ---
+        async function downloadImage(url) {
+            try {
+                // Fetch the image as a blob to force the download instead of opening in a new tab
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = `callmissed-image-${Date.now()}.png`; // Set a default filename
+                document.body.appendChild(a);
+                a.click();
+
+                // Cleanup
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(blobUrl);
+            } catch (error) {
+                // Fallback in case of CORS issues
+                window.open(url, '_blank');
+            }
+        }
+
+        // --- Vision Logic ---
+        async function analyzeImage() {
+            const fileInput = document.getElementById('vision-file');
+            const question = document.getElementById('vision-question').value;
+            const resultDiv = document.getElementById('vision-result');
+            const btn = document.getElementById('vision-btn');
+
+            if (!fileInput.files[0] || !question) {
+                alert("Please select an image and enter a question.");
+                return;
+            }
+
+            btn.disabled = true;
+
+            // New Advanced Loader
+            resultDiv.innerHTML = `
+                <div class="ai-loader">
+                    <div class="spinner"></div>
+                    <div class="loader-text">Analyzing image data...</div>
+                </div>
+            `;
+
+            const formData = new FormData();
+            formData.append('image', fileInput.files[0]);
+            formData.append('question', question);
+
+            try {
+                const response = await fetch('/vision', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    resultDiv.innerHTML = `<div style="padding: 15px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; margin-top: 15px;"><strong>Answer:</strong><br>${data.answer}</div>`;
+                } else {
+                    resultDiv.innerHTML = `<span style="color:red; display:block; margin-top:15px;">Error: ${data.detail || 'Failed to analyze'}</span>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span style="color:red; display:block; margin-top:15px;">Error: ${error.message}</span>`;
+            }
+            btn.disabled = false;
+        }
+    </script>
+</body>
+</html>

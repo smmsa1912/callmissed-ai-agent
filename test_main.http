@@ -1,0 +1,29 @@
+### Test the Chat Endpoint
+POST http://127.0.0.1:8000/chat
+Content-Type: application/json
+
+{
+  "message": "Hi, my favorite number is 42."
+}
+
+# Look at the end of the stream response for [SESSION_ID]<your-uuid>
+
+### Test Chat 2 (Tests the memory)
+# Replace <your-uuid> with the actual ID returned from the first request
+POST http://127.0.0.1:8000/chat
+Content-Type: application/json
+
+{
+  "session_id": "<your-uuid>",
+  "message": "What is my favorite number?"
+}
+
+
+### Test the Image Endpoint
+POST http://127.0.0.1:8000/image
+Content-Type: application/json
+
+{
+  "prompt": "A futuristic city skyline at sunset, cyberpunk style, digital art"
+}
+
