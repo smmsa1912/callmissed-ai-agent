@@ -1,6 +1,6 @@
 # CallMissed AI Agent API
 
-A production-ready Python backend service built with **FastAPI** that wraps the CallMissed AI API. This project exposes three core endpoints: stateful chat streaming, image generation, and vision analysis. 
+A Python backend prototype built with **FastAPI** that wraps the CallMissed AI API. This project exposes three core endpoints: stateful chat streaming, image generation, and vision analysis. 
 
 As a bonus for easy evaluation, this project includes a lightweight, interactive HTML/JS frontend served directly from the root endpoint, allowing for instant testing of all features without external tools.
 
@@ -21,7 +21,7 @@ As a bonus for easy evaluation, this project includes a lightweight, interactive
 
 ### 1. Prerequisites
 - Python 3.10+
-- A free CallMissed API Key. You can get one by visiting [docs.callmissed.com](https://docs.callmissed.com).
+- A CallMissed API key. See [docs.callmissed.com](https://docs.callmissed.com).
 
 ### 2. Install Dependencies
 Clone the repository and install the required packages:
@@ -71,7 +71,7 @@ Accepts a message and streams the response back via Server-Sent Events (SSE). To
 
 **Start a new session:**
 ```bash
-curl -N -X POST [http://127.0.0.1:8000/chat](http://127.0.0.1:8000/chat) \
+curl -N -X POST http://127.0.0.1:8000/chat \
   -H "Content-Type: application/json" \
   -d '{"message": "Hello, my favorite color is blue."}'
 ```
@@ -79,7 +79,7 @@ curl -N -X POST [http://127.0.0.1:8000/chat](http://127.0.0.1:8000/chat) \
 
 **Continue session (tests memory):**
 ```bash
-curl -N -X POST [http://127.0.0.1:8000/chat](http://127.0.0.1:8000/chat) \
+curl -N -X POST http://127.0.0.1:8000/chat \
   -H "Content-Type: application/json" \
   -d '{"session_id": "your-uuid-here", "message": "What is my favorite color?"}'
 ```
@@ -90,7 +90,7 @@ Generates an image based on a text prompt.
 
 **Request:**
 ```bash
-curl -X POST [http://127.0.0.1:8000/image](http://127.0.0.1:8000/image) \
+curl -X POST http://127.0.0.1:8000/image \
   -H "Content-Type: application/json" \
   -d '{"prompt": "A futuristic city skyline at sunset, cyberpunk style, digital art"}'
 ```
@@ -101,7 +101,7 @@ Analyzes an uploaded image based on a provided question.
 
 **Request:**
 ```bash
-curl -X POST [http://127.0.0.1:8000/vision](http://127.0.0.1:8000/vision) \
+curl -X POST http://127.0.0.1:8000/vision \
   -F "question=What is in this image?" \
   -F "image=@/path/to/your/image.jpg"
 ```
@@ -111,7 +111,7 @@ curl -X POST [http://127.0.0.1:8000/vision](http://127.0.0.1:8000/vision) \
 ## 🏗️ Architecture & Design Decisions
 
 - **Separation of Concerns:** The CallMissed API client configuration (`client.py`) is isolated from the routing and schema logic (`main.py`) to keep the codebase modular.
-- **Robust Error Handling:** Upstream CallMissed API errors (e.g., 402, 429) are caught in the service layer and raised as generic `HTTPException`s. This ensures raw API keys or internal tracebacks are never leaked to the client.
+- **Robust Error Handling:** Upstream CallMissed API errors (e.g., 402, 429) are caught in the service layer and raised as generic `HTTPException`s. This is intended to avoid returning raw upstream errors to clients; review logging and exception paths before production use.
 - **Configuration Management:** Uses `pydantic-settings` to safely validate and parse environment variables, including parsing a JSON string for model definitions to prevent hardcoding.
 - **Stateful Memory:** Implemented an in-memory dictionary to track `session_id`s, allowing the LLM to maintain conversation context seamlessly.
 
@@ -129,7 +129,7 @@ curl -X POST [http://127.0.0.1:8000/vision](http://127.0.0.1:8000/vision) \
 If I had more time to expand this into a true production service, I would add:
 1. **Persistent Storage:** Swap the in-memory chat history for PostgreSQL or Redis to ensure horizontal scalability and persistence.
 2. **Authentication & Rate Limiting:** Add a lightweight API key middleware and token-bucket rate limiting to protect the endpoints from abuse.
-3. **Dockerization:** Add a `Dockerfile` and `docker-compose.yml` to ensure the environment is 100% reproducible anywhere.
+3. **Dockerization:** Add a `Dockerfile` and `docker-compose.yml` to improve reproducibility across development environments.
 4. **Image Compression:** Add a utility function to compress large image uploads on the `/vision` endpoint before converting them to base64 to save bandwidth and API limits.
 
 ## 🤖 AI Usage Disclosure
